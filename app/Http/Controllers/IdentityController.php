@@ -86,14 +86,14 @@ class IdentityController extends Controller
 
                     $this->insert_record($matching_contact_by_email_secondary->linkedId,$email,$phone_number,'secondary');
 
-                    return $this->coalesced_results($matching_contact_by_email_secondary,true);
+                    return $this->coalesced_results($matching_contact_by_email_secondary,false);
                 }
                 else if(!$matching_contact_by_email_secondary && $matching_contact_by_phone_secondary){
                     // Case when we get a match with a secondary phone
 
                     $this->insert_record($matching_contact_by_phone_secondary->linkedId,$email,$phone_number,'secondary');
 
-                    return $this->coalesced_results($matching_contact_by_phone_secondary,true);
+                    return $this->coalesced_results($matching_contact_by_phone_secondary,false);
                 }
                 else{
                     // Case when both match the same secondary record
@@ -114,7 +114,7 @@ class IdentityController extends Controller
 
     public function coalesced_results($record,$is_primary){
 
-        // since we are passing secondary record for match with a secondary record hence we get the primary record corresponding to the secondary record
+        // since we are passing secondary record for match with a secondary record hence we first get the primary record corresponding to the secondary record
         if(!$is_primary){
             $record = DB::table('contacts')->where('id',$record->linkedId)->first();
         }

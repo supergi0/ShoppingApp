@@ -12,8 +12,6 @@ class IdentityController extends Controller
         $email = $request->input('email');
         $phone_number = $request->input('phoneNumber');
 
-        error_log('Received email: ' . $email . ', phone number: ' . $phone_number);
-
         // Query to check if a contact exists with the given phone number or email
         $exisiting_contact_count = DB::table('contacts')
                     ->where('phoneNumber', $phone_number)

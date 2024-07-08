@@ -10,6 +10,8 @@
 
 - Currently no checks are made for bad input, since it will increase overhead costs. This project assumes input checking will be done via a frontend framework.
 
+- Added hash indexes on linkedId,phoneNumber and email for faster read operations.
+
 - DB schema can be checked via the migrations used under [contact_migration](./database/migrations/2024_07_07_192849_create_contacts_table.php)
 
 ### Hosted on render.com

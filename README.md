@@ -21,7 +21,9 @@
 
 ## Workflow
 
-- Defines the business logic pictorially
+- The logic for insertion of records is shown in the below diagram
 
 ![Image](./storage/docimg.png)
+
+- The logic for reading records is: Get corresponding primary record -> Get all rows having linkedId same as Id of primary record -> loop through them to get output -> Remove duplicate entries -> Get output.
 

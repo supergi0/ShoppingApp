@@ -14,7 +14,7 @@
 
 ### Hosted on render.com
 
-- Since Render.com does not offer native support for Laravel PHP, the application is containerized using Docker along with Nginx to forward the Ports
+- Since Render.com does not offer native support for Laravel PHP, the application is containerized using Docker and Nginx to forward the Ports
 
 - Can accept post requests on this [URL](https://shoppingapp-2ei4.onrender.com/api/identify);
 

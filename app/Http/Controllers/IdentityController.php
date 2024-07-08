@@ -25,7 +25,7 @@ class IdentityController extends Controller
             $new_contact = DB::table('contacts')->where('id', $new_contact_id)->first();
 
             // return the single new record
-            return $this->coalesced_results($new_contact);
+            return $this->coalesced_results($new_contact,true);
         }
         else{
             // Get the primary email matching record for the given request email
@@ -45,14 +45,14 @@ class IdentityController extends Controller
 
                 $this->insert_record($matching_contact_by_phone->id,$email,$phone_number,'secondary');
                 
-                return $this->coalesced_results($matching_contact_by_phone);
+                return $this->coalesced_results($matching_contact_by_phone,true);
             }
             else if(!$matching_contact_by_phone && $matching_contact_by_email){
                 // Case when we get a match to a primary email record
 
                 $this->insert_record($matching_contact_by_email->id,$email,$phone_number,'secondary');
 
-                return $this->coalesced_results($matching_contact_by_email);
+                return $this->coalesced_results($matching_contact_by_email,true);
             }
             else if($matching_contact_by_email && $matching_contact_by_phone && $matching_contact_by_email->id == $matching_contact_by_phone->id){
                 // Case when we get a match to both primary email and primary phone and id are also same
@@ -66,12 +66,42 @@ class IdentityController extends Controller
 
                 $this->update_record($matching_contact_by_email,$matching_contact_by_phone);
 
-                return $this->coalesced_results($matching_contact_by_email);
+                return $this->coalesced_results($matching_contact_by_email,true);
             }
             else{
                 // Case when we get a match with a secondary record with either id or phone
 
-                
+                // Get the secondary email matching record for the given request email
+                $matching_contact_by_email_secondary = DB::table('contacts')
+                ->where('email', $email)
+                ->first();
+
+                // Get the secondary phone matching record for the given request phone
+                $matching_contact_by_phone_secondary = DB::table('contacts')
+                ->where('phoneNumber', $phone_number)
+                ->first();
+
+                if($matching_contact_by_email_secondary && !$matching_contact_by_phone_secondary){
+                    // Case when we get a match with a secondary email
+
+                    $this->insert_record($matching_contact_by_email_secondary->linkedId,$email,$phone_number,'secondary');
+
+                    return $this->coalesced_results($matching_contact_by_email_secondary,true);
+                }
+                else if(!$matching_contact_by_email_secondary && $matching_contact_by_phone_secondary){
+                    // Case when we get a match with a secondary phone
+
+                    $this->insert_record($matching_contact_by_phone_secondary->linkedId,$email,$phone_number,'secondary');
+
+                    return $this->coalesced_results($matching_contact_by_phone_secondary,true);
+                }
+                else{
+                    // Case when both match the same secondary record
+
+                    // nothing to modify in database
+
+                    return $this->duplicate_order();
+                }
             }
 
         }
@@ -82,25 +112,36 @@ class IdentityController extends Controller
         return response()->json(['error' => 'Orders were not placed due to duplicate identity'], 400);
     }
 
-    public function coalesced_results($primary_record){
-        $linked_contacts = DB::table('contacts')->where('linkedId', $primary_record->id)->get();
+    public function coalesced_results($record,$is_primary){
 
-        $emails = [$primary_record->email];
-        $phoneNumbers = [$primary_record->phoneNumber];
+        // since we are passing secondary record for match with a secondary record hence we get the primary record corresponding to the secondary record
+        if(!$is_primary){
+            $record = DB::table('contacts')->where('id',$record->linkedId)->first();
+        }
+
+        $linked_contacts = DB::table('contacts')->where('linkedId', $record->id)->get();
+    
+        $emails = [$record->email];
+        $phoneNumbers = [$record->phoneNumber];
         $secondaryContactIds = [];
-
+    
         foreach ($linked_contacts as $contact) {
             $emails[] = $contact->email;
             $phoneNumbers[] = $contact->phoneNumber;
             $secondaryContactIds[] = $contact->id;
         }
-
+    
+        // Remove duplicate values
+        $emails = array_unique($emails);
+        $phoneNumbers = array_unique($phoneNumbers);
+        $secondaryContactIds = array_unique($secondaryContactIds);
+    
         return response()->json([
             'contact' => [
-                'primaryContactId' => $primary_id,
-                'emails' => $emails,
-                'phoneNumbers' => $phoneNumbers,
-                'secondaryContactIds' => $secondaryContactIds,
+                'primaryContactId' => $record->id,
+                'emails' => array_values($emails), // array_values to reindex array after removing duplicates
+                'phoneNumbers' => array_values($phoneNumbers),
+                'secondaryContactIds' => array_values($secondaryContactIds),
             ]
         ]);
     }

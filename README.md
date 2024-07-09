@@ -22,6 +22,8 @@
 
 - May respond a bit slow due to this setup as well as 512mb RAM :)
 
+- May require about 2-3 minutes for render to load application from the initial access, since Render stops frequently due to inactivity.
+
 ### Input type
 
 Post contact requests using the following example
